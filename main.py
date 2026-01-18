@@ -195,19 +195,22 @@ class Flag:
     def __init__(self, pos):
         self.actor = Actor("tiles/flag_red_0", topleft=pos)
         self.activated = False
-
         self.frames = ["tiles/flag_red_0", "tiles/flag_red_1"]
         self.frame_index = 0
-        self.timer = 0
+        self.animate_flag()
+
+    def animate_flag(self):
+        if self.activated:
+            return  # para a animação se a bandeira já foi ativada
+        self.frame_index = (self.frame_index + 1) % len(self.frames)
+        self.actor.image = self.frames[self.frame_index]
+        clock.schedule_unique(self.animate_flag, 0.3)
 
     def update(self):
-        if self.activated:
-            return
+        pass
 
-        self.timer += 1
-        if self.timer % 20 == 0:
-            self.frame_index = (self.frame_index + 1) % len(self.frames)
-            self.actor.image = self.frames[self.frame_index]
+    def draw(self):
+        self.actor.draw()
 
     def check_victory(self, hero):
         if self.activated:
@@ -230,7 +233,7 @@ class Button:
         return self.actor.collidepoint(pos)
 
 
-#OBJECTS
+# OBJECTS
 # world setup
 platforms = []
 # ground
@@ -238,14 +241,13 @@ for x in range(0, WIDTH, TILE_SIZE):
     platforms.append(
         Platform("tiles/ground", (x, GROUND_Y), is_ground=True)
     )
-#floating platforms
+# floating platforms
 platforms.extend(create_floating_platform(200, 550, 3))
 platforms.extend(create_floating_platform(610, 370, 3))
 platforms.extend(create_floating_platform(450, 220, 2))
 platforms.extend(create_floating_platform(250, 100, 2))
-#flag = Flag((250 + TILE_SIZE // 2, 100))
 
-#hill
+# hill
 for i in range(3):
     platforms.append(
         Platform(
@@ -280,10 +282,9 @@ def reset_game():
 
     flag = Flag((250 + TILE_SIZE // 2, 100 - TILE_SIZE))
 
-
     game_state = STATE_PLAYING
 
-#INPUT
+# INPUT
 def on_key_down(key):
     global game_state
 
@@ -308,7 +309,7 @@ def on_mouse_down(pos):
             game_state = STATE_MENU
 
 
-#LOOP
+# LOOP
 def update():
     global game_state
 
@@ -318,14 +319,14 @@ def update():
         for enemy in enemies:
             enemy.update()
 
-        # derrota
+        # Lose
         if hero.check_enemy_collision(enemies):
             game_state = STATE_GAME_OVER
             music.stop()
             sounds.hit.play()
             return
 
-        # vitória
+        # Victory
         if flag.check_victory(hero):
             game_state = STATE_WIN
             music.stop()
@@ -339,10 +340,8 @@ def draw():
         draw_game()
     elif game_state == STATE_GAME_OVER:
         draw_game_over()
-        #back_button.draw()
     elif game_state == STATE_WIN:
         draw_win()
-        #back_button.draw()
 
 def toggle_sound():
     global sound_enabled
@@ -356,7 +355,6 @@ def toggle_sound():
 
 def exit_game():
     quit()
-
 
 def draw_win():
     screen.clear()
